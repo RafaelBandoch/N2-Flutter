@@ -1,2 +1,2 @@
 # N2-Flutter
-Esse repositório é exclusivamente para a entrega da N2 de dispositivos móveis
+## Integrantes do grupo: Anttonio Osório Molinaro Maccagnini, Gabriel Lengert Guedes, João Vitor Paranhos, João Pedro Alves de Lima e Rafael Alexandre Alves Bandoch
