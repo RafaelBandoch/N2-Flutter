@@ -26,7 +26,7 @@ class DatabaseHelper {
   }
 
   Future<void> _onCreate(Database db, int version) async {
-    // Tabela de Usuários (Professores e Alunos)
+    // Tabela de Usuários 
     await db.execute('''
       CREATE TABLE usuarios (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -37,7 +37,7 @@ class DatabaseHelper {
       )
     ''');
 
-    // Tabela de Aulas (criada pelo professor)
+    // Tabela de Aulas 
     await db.execute('''
       CREATE TABLE aulas (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -61,7 +61,7 @@ class DatabaseHelper {
       )
     ''');
 
-    // Tabela de Presenças (registros dos alunos)
+    // Tabela de Presenças 
     await db.execute('''
       CREATE TABLE presencas (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -73,7 +73,7 @@ class DatabaseHelper {
       )
     ''');
 
-    // Criar um professor e um aluno padrão para teste
+    // Criar um professor e um aluno padrão
     await db.execute(
         "INSERT INTO usuarios (nome, email, senha, tipo) VALUES ('Professor Teste', 'prof@prof.com', '123', 'professor')");
     await db.execute(
@@ -110,7 +110,7 @@ class DatabaseHelper {
     return res.isNotEmpty ? res.first : null;
   }
 
-  // --- Funções de Aula e Rodada (Professor) ---
+  // --- Funções de Aula e Rodada ---
 
   Future<int> iniciarAula(int professorId, String disciplina) async {
     final db = await database;
@@ -123,12 +123,11 @@ class DatabaseHelper {
       'disciplina': disciplina,
     });
 
-    // 2. Criar as 4 rodadas para essa aula
     for (int i = 1; i <= 4; i++) {
       await db.insert('rodadas', {
         'aula_id': aulaId,
         'numero_rodada': i,
-        'status': 'pendente', // Estados: pendente, ativa, encerrada
+        'status': 'pendente',
       });
     }
     return aulaId;
@@ -171,7 +170,7 @@ class DatabaseHelper {
     final data = DateTime.now().toIso8601String().split('T').first;
     final agora = DateTime.now();
     
-    // Pega rodadas que devem estar ativas baseado nos timestamps
+    // Pega rodadas que devem estar ativas
     final rodadas = await db.rawQuery('''
       SELECT r.* FROM rodadas r
       JOIN aulas a ON r.aula_id = a.id
@@ -213,7 +212,7 @@ class DatabaseHelper {
         whereArgs: [alunoId, rodadaId]);
 
     if (jaRegistrou.isNotEmpty) {
-      return false; // Já registrou
+      return false; 
     }
 
     await db.insert('presencas', {
@@ -221,10 +220,9 @@ class DatabaseHelper {
       'rodada_id': rodadaId,
       'timestamp': DateTime.now().toIso8601String(),
     });
-    return true; // Registrado com sucesso
+    return true;
   }
 
-  // Para o Histórico do Aluno (Nota 8)
   Future<List<Map<String, dynamic>>> getHistoricoAluno(int alunoId) async {
     final db = await database;
     return await db.rawQuery('''
@@ -243,7 +241,7 @@ class DatabaseHelper {
 
   // --- Funções para Dashboard do Professor ---
 
-  // Busca aulas ativas (que têm rodadas em andamento)
+  // Busca aulas ativas 
   Future<List<Map<String, dynamic>>> getAulasAtivas(int professorId) async {
     final db = await database;
     final data = DateTime.now().toIso8601String().split('T').first;
@@ -266,7 +264,7 @@ class DatabaseHelper {
     ''', [professorId, data]);
   }
 
-  // Busca todas as aulas do professor (para histórico)
+  // Busca todas as aulas do professor 
   Future<List<Map<String, dynamic>>> getAulasProfessor(int professorId) async {
     final db = await database;
     return await db.query('aulas', 
@@ -281,18 +279,14 @@ class DatabaseHelper {
     final db = await database;
     
     try {
-      // Primeiro, busca todas as rodadas da aula
       final rodadas = await db.query('rodadas', where: 'aula_id = ?', whereArgs: [aulaId]);
       
-      // Apaga todas as presenças das rodadas desta aula
       for (final rodada in rodadas) {
         await db.delete('presencas', where: 'rodada_id = ?', whereArgs: [rodada['id']]);
       }
-      
-      // Apaga todas as rodadas da aula
+
       await db.delete('rodadas', where: 'aula_id = ?', whereArgs: [aulaId]);
-      
-      // Por fim, apaga a aula
+
       final result = await db.delete('aulas', where: 'id = ?', whereArgs: [aulaId]);
       
       return result > 0;
@@ -307,11 +301,10 @@ class DatabaseHelper {
     final db = await database;
     
     try {
-      // Busca informações da aula
+     
       final aula = await db.query('aulas', where: 'id = ?', whereArgs: [aulaId], limit: 1);
       if (aula.isEmpty) return null;
       
-      // Busca estatísticas das rodadas
       final rodadas = await db.rawQuery('''
         SELECT 
           COUNT(*) as total_rodadas,
@@ -322,7 +315,6 @@ class DatabaseHelper {
         WHERE aula_id = ?
       ''', [aulaId]);
       
-      // Busca total de presenças registradas
       final presencas = await db.rawQuery('''
         SELECT COUNT(*) as total_presencas
         FROM presencas p
